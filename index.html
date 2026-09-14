@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>(لسه بفكرلو في اسم 😂)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --board: #FFFFFF;
+    --board-dark: #F2F2F0;
+    --paper: #FBF8F2;
+    --surface: #FFFFFF;
+    --ink: #2B2620;
+    --ink-soft: #6B6255;
+    --green: #2F6F4F;
+    --coral: #E8593E;
+    --line: #E3D9C4;
+    --cat-bg: #E6F0EA;
+    --shadow: rgba(43,38,32,0.25);
+    --shadow-strong: rgba(43,38,32,0.32);
+    --texture-dot: rgba(43,38,32,0.055);
+    --texture-scratch: rgba(43,38,32,0.03);
+  }
+  :root[data-theme="dark"]{
+    --board: #241E1A;
+    --board-dark: #16120F;
+    --paper: #2E2822;
+    --surface: #201B17;
+    --ink: #EDE6D9;
+    --ink-soft: #B8AC96;
+    --green: #4FAE82;
+    --coral: #FF7A5C;
+    --line: #45392C;
+    --cat-bg: rgba(79,174,130,0.16);
+    --shadow: rgba(0,0,0,0.45);
+    --shadow-strong: rgba(0,0,0,0.55);
+    --texture-dot: rgba(255,255,255,0.045);
+    --texture-scratch: rgba(255,255,255,0.03);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'IBM Plex Sans Arabic', sans-serif;
+    background: var(--board);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(0,0,0,0.025) 0, transparent 40%),
+      radial-gradient(circle at 80% 60%, rgba(0,0,0,0.025) 0, transparent 45%),
+      radial-gradient(var(--texture-dot) 1px, transparent 1.4px),
+      radial-gradient(var(--texture-dot) 1px, transparent 1.4px),
+      repeating-linear-gradient(115deg, var(--texture-scratch) 0px, var(--texture-scratch) 1px, transparent 1px, transparent 150px),
+      repeating-linear-gradient(25deg, var(--texture-scratch) 0px, var(--texture-scratch) 1px, transparent 1px, transparent 190px);
+    background-size: auto, auto, 25px 25px, 37px 37px, auto, auto;
+    background-position: 0 0, 0 0, 0 0, 12px 18px, 0 0, 0 0;
+    color: var(--ink);
+    min-height:100vh;
+    transition: background-color .35s ease, color .35s ease;
+  }
+
+  /* Theme toggle */
+  .theme-toggle{
+    position:fixed;
+    top:16px; left:16px;
+    z-index:60;
+    width:42px; height:42px;
+    border-radius:50%;
+    border:2px solid var(--ink);
+    background:var(--paper);
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:3px 3px 0 var(--shadow);
+    transition: background-color .3s ease, border-color .3s ease, transform .15s ease;
+  }
+  .theme-toggle:active{transform:translate(1px,1px);}
+  .theme-toggle svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .theme-toggle .icon-moon{display:none;}
+  .theme-toggle.is-dark .icon-sun{display:none;}
+  .theme-toggle.is-dark .icon-moon{display:block;}
+  @keyframes spinIcon{ from{transform:rotate(0deg);} to{transform:rotate(200deg);} }
+  .theme-toggle.spin svg{animation:spinIcon .4s ease;}
+
+  header{
+    padding:30px 20px 22px;
+    text-align:center;
+    transition: transform .08s ease-out, opacity .08s ease-out;
+    will-change: transform, opacity;
+  }
+  header h1{
+    font-size:2.1rem;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-0.5px;
+  }
+  header h1 span{color:var(--coral);}
+  header p{
+    color:var(--ink-soft);
+    margin:6px 0 0;
+    font-size:0.95rem;
+  }
+
+  /* Bottom tab bar — same on phone and laptop */
+  nav{
+    position:fixed;
+    bottom:0; left:0; right:0;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    padding:8px 16px calc(8px + env(safe-area-inset-bottom));
+    background:var(--paper);
+    border-top:2px solid var(--ink);
+    box-shadow:0 -4px 0 var(--shadow);
+    z-index:55;
+    transition: background-color .35s ease, border-color .35s ease;
+  }
+  nav button{
+    flex:1;
+    max-width:130px;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    background:none; border:none; cursor:pointer; color:var(--ink-soft);
+    padding:7px 6px; border-radius:12px;
+    transition: color .2s ease, background-color .2s ease;
+  }
+  nav button svg{width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  nav button .nav-label{font-size:0.72rem; font-weight:600;}
+  nav button.active{color:var(--coral); background:var(--cat-bg);}
+
+  main{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 16px 110px;
+  }
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* Auth card */
+  .auth-card{
+    background:var(--paper);
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:24px;
+    max-width:420px;
+    margin:20px auto;
+    box-shadow:5px 5px 0 var(--shadow);
+    transition: background-color .35s ease, border-color .35s ease;
+  }
+  .auth-card h2{margin-top:0;}
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:0.85rem; font-weight:600; margin-bottom:5px; color:var(--ink-soft);}
+  .field input, .field select, .field textarea{
+    width:100%;
+    padding:10px 12px;
+    border:1.5px solid var(--line);
+    border-radius:6px;
+    font-family:inherit;
+    font-size:0.95rem;
+    background:var(--surface);
+    color:var(--ink);
+    transition: background-color .3s ease, border-color .3s ease, color .3s ease;
+  }
+  .field input:disabled{opacity:.65; cursor:not-allowed;}
+  .field textarea{resize:vertical; min-height:80px;}
+
+  .btn{
+    display:inline-block;
+    background:var(--green);
+    color:#fff;
+    border:none;
+    padding:11px 20px;
+    border-radius:6px;
+    font-family:inherit;
+    font-weight:600;
+    font-size:0.95rem;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn.coral{background:var(--coral);}
+  .btn-link{
+    background:none; border:none; color:var(--green); font-weight:600; cursor:pointer;
+    font-family:inherit; font-size:0.85rem; padding:0; margin-top:10px;
+  }
+
+  /* ---- Request board: torn street-flyer cards ---- */
+  .board-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:34px;
+    perspective:1600px;
+    padding-top:10px;
+  }
+  .note{
+    position:relative;
+    --side: 1;
+    --tx: calc(var(--side) * 90px);
+    --ry: calc(var(--side) * -35deg);
+    --rx: 0deg;
+    --sc: .92;
+    --rot: 0deg;
+    opacity:0;
+    transform: translateX(var(--tx)) rotateY(var(--ry)) rotateX(var(--rx)) rotateZ(var(--rot)) scale(var(--sc));
+    transition: opacity .5s cubic-bezier(.22,.9,.3,1.1),
+                transform .6s cubic-bezier(.22,.9,.3,1.1);
+    transform-style:preserve-3d;
+    will-change:transform, opacity;
+  }
+  .note.in-view{
+    --tx:0px; --ry:0deg; --sc:1;
+    opacity:1;
+  }
+  .note::before{
+    content:'';
+    position:absolute;
+    top:-9px; right:24px;
+    width:16px; height:16px;
+    background:var(--coral);
+    border-radius:50%;
+    box-shadow:0 2px 3px rgba(0,0,0,0.3);
+    z-index:2;
+  }
+  .note-body{
+    background:var(--paper);
+    border:2px solid var(--ink);
+    padding:16px 18px 28px;
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 100%,
+      96% 95%, 92% 100%, 88% 95%, 84% 100%, 80% 95%, 76% 100%,
+      72% 95%, 68% 100%, 64% 95%, 60% 100%, 56% 95%, 52% 100%,
+      48% 95%, 44% 100%, 40% 95%, 36% 100%, 32% 95%, 28% 100%,
+      24% 95%, 20% 100%, 16% 95%, 12% 100%, 8% 95%, 4% 100%, 0% 95%
+    );
+    box-shadow:4px 4px 0 var(--shadow);
+    transition: background-color .35s ease, border-color .35s ease;
+  }
+  .note .cat{
+    display:inline-block;
+    font-size:0.75rem;
+    font-weight:600;
+    color:var(--green);
+    background:var(--cat-bg);
+    padding:3px 10px;
+    border-radius:20px;
+    margin-bottom:8px;
+  }
+  .note h3{margin:0 0 6px; font-size:1.1rem;}
+  .note p{margin:0 0 10px; color:var(--ink-soft); font-size:0.92rem; line-height:1.5;}
+  .note .meta{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'IBM Plex Mono', monospace; font-size:0.85rem; color:var(--ink);
+    border-top:1px dashed var(--line); padding-top:10px;
+  }
+  .note .meta b{color:var(--coral);}
+  .tab-btn{
+    display:block;
+    width:84%;
+    margin:-2px auto 0;
+    background:var(--coral);
+    color:#fff;
+    border:none;
+    border-top:2px dashed var(--paper);
+    outline:2px dashed var(--ink);
+    outline-offset:-2px;
+    padding:10px 14px;
+    border-radius:0 0 9px 9px;
+    font-family:inherit;
+    font-weight:600;
+    font-size:0.86rem;
+    cursor:pointer;
+    box-shadow:3px 5px 0 var(--shadow);
+    transform:rotate(-0.6deg);
+  }
+  .empty{
+    text-align:center; padding:50px 20px; color:var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .note{ transition:none !important; opacity:1 !important; transform:none !important; }
+    .theme-toggle.spin svg{ animation:none !important; }
+    header{ transition:none !important; }
+  }
+
+  /* Profile */
+  .profile-head{
+    display:flex; align-items:center; gap:14px; margin-bottom:22px;
+  }
+  .avatar{
+    width:56px; height:56px; border-radius:50%;
+    background:var(--coral); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:1.25rem;
+    border:2px solid var(--ink);
+    box-shadow:3px 3px 0 var(--shadow);
+    flex-shrink:0;
+  }
+  .avatar-lg{width:84px; height:84px; font-size:1.8rem;}
+  .profile-info{min-width:0;}
+  .profile-info h2{margin:0; font-size:1.15rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .settings-btn{
+    margin-inline-start:auto;
+    width:40px; height:40px; flex-shrink:0;
+    border-radius:50%;
+    border:2px solid var(--ink);
+    background:var(--paper);
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:2px 2px 0 var(--shadow);
+    transition: transform .5s ease, background-color .3s ease, border-color .3s ease;
+  }
+  .settings-btn svg{width:19px; height:19px; stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
+  .settings-btn.open{transform:rotate(75deg);}
+  .settings-panel{
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:8px;
+    padding:16px;
+    margin-bottom:24px;
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+  .settings-panel h4{margin:0 0 12px; font-size:0.95rem; color:var(--ink-soft);}
+
+  /* Offers panel */
+  .offer-item{
+    background:var(--surface); border:1.5px solid var(--line); border-radius:6px;
+    padding:12px 14px; margin-bottom:10px;
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+  .offer-item .price{font-family:'IBM Plex Mono', monospace; font-weight:600; color:var(--green);}
+
+  /* Requester chip on cards */
+  .user-chip{
+    display:flex; align-items:center; gap:8px;
+    cursor:pointer; margin-bottom:10px; width:fit-content;
+  }
+  .mini-avatar{
+    width:26px; height:26px; border-radius:50%;
+    background:var(--green); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.7rem; font-weight:700;
+    border:1.5px solid var(--ink);
+    flex-shrink:0;
+  }
+  .user-chip span{font-size:0.83rem; font-weight:600; color:var(--ink);}
+  .user-chip:hover span{color:var(--coral);}
+
+  /* Chats list */
+  .chat-item{
+    display:flex; align-items:center; gap:12px;
+    background:var(--surface); border:1.5px solid var(--line); border-radius:8px;
+    padding:12px 14px; margin-bottom:10px; cursor:pointer;
+    transition: background-color .3s ease, border-color .3s ease;
+  }
+  .chat-item .mini-avatar{width:44px; height:44px; font-size:1rem;}
+  .chat-item .chat-meta{min-width:0; flex:1;}
+  .chat-item .chat-meta h4{margin:0; font-size:0.95rem;}
+  .chat-item .chat-meta p{margin:2px 0 0; font-size:0.8rem; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  /* Chat thread */
+  .chat-back{
+    display:flex; align-items:center; gap:8px;
+    background:none; border:none; cursor:pointer; color:var(--ink);
+    font-family:inherit; font-weight:700; font-size:1rem;
+    margin-bottom:14px; padding:4px 0;
+  }
+  .chat-thread{display:flex; flex-direction:column;}
+  .chat-messages{
+    display:flex; flex-direction:column; gap:9px;
+    min-height:260px; max-height:52vh; overflow-y:auto;
+    padding:6px 2px 14px;
+  }
+  .bubble{
+    max-width:75%;
+    padding:9px 13px;
+    border-radius:14px;
+    font-size:0.9rem;
+    line-height:1.45;
+    word-break:break-word;
+  }
+  .bubble.mine{
+    background:var(--coral); color:#fff;
+    margin-inline-start:auto;
+  }
+  .bubble.theirs{
+    background:var(--surface); border:1.5px solid var(--line);
+    margin-inline-end:auto;
+  }
+  .chat-input-row{display:flex; gap:8px; margin-top:6px;}
+  .chat-input-row input{
+    flex:1; padding:10px 14px;
+    border:1.5px solid var(--line); border-radius:22px;
+    background:var(--surface); color:var(--ink); font-family:inherit; font-size:0.9rem;
+  }
+  .chat-input-row button{
+    background:var(--green); color:#fff; border:none; border-radius:50%;
+    width:42px; height:42px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+
+  /* Public profile view */
+  .profile-view-card{text-align:center;}
+
+  .modal-overlay{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6);
+    align-items:flex-start; justify-content:center; padding:30px 16px 130px; z-index:70; overflow-y:auto;
+  }
+  .modal-overlay.active{display:flex;}
+  .modal{
+    background:var(--paper); border:2px solid var(--ink); border-radius:10px;
+    padding:22px; max-width:480px; width:100%;
+    box-shadow:6px 6px 0 var(--shadow-strong);
+  }
+  .modal h3{margin-top:0;}
+  .modal-close{
+    float:left; background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--ink-soft);
+  }
+
+  .toast{
+    position:fixed; bottom:86px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--paper); padding:10px 20px; border-radius:6px;
+    font-size:0.9rem; z-index:100; opacity:0; transition:opacity .3s;
+  }
+  .toast.show{opacity:1;}
+
+  .msg{font-size:0.85rem; margin-top:8px;}
+  .msg.error{color:var(--coral);}
+  .msg.ok{color:var(--green);}
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="تبديل الوضع الداكن" title="الوضع الداكن">
+  <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4 12H2M22 12h-2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.5A9 9 0 1 1 11.5 3a7 7 0 0 0 9.5 9.5Z"/></svg>
+</button>
+
+<header>
+  <h1>(لسه بفكرلو في <span>اسم</span> 😂)</h1>
+  <p>علّق طلبك، ومزودين الخدمة يبعتولك عروضهم</p>
+</header>
+
+<main>
+
+  <!-- BOARD VIEW -->
+  <div class="view active" id="view-board">
+    <div class="board-grid" id="boardGrid">
+      <div class="empty">جارٍ التحميل...</div>
+    </div>
+  </div>
+
+  <!-- POST VIEW -->
+  <div class="view" id="view-post">
+    <div id="authRequired" class="auth-card" style="display:none;">
+      <h2>سجّل دخولك الأول</h2>
+      <p style="color:var(--ink-soft); font-size:0.9rem;">لازم يكون عندك حساب عشان تنشر طلب أو تقدم عرض.</p>
+      <button class="btn" onclick="switchView('account')">تسجيل الدخول / حساب جديد</button>
+    </div>
+    <form class="auth-card" id="postForm" style="display:none;">
+      <h2>انشر طلب خدمة</h2>
+      <div class="field">
+        <label>التصنيف</label>
+        <select id="reqCategory" required></select>
+      </div>
+      <div class="field">
+        <label>عنوان الطلب</label>
+        <input type="text" id="reqTitle" placeholder="مثال: عايز تصميم لوجو لمحل" required>
+      </div>
+      <div class="field">
+        <label>تفاصيل الطلب</label>
+        <textarea id="reqDesc" placeholder="اشرح اللي محتاجه بالظبط..." required></textarea>
+      </div>
+      <div class="field">
+        <label>الميزانية التقريبية (اختياري)</label>
+        <input type="number" id="reqBudget" placeholder="بالجنيه">
+      </div>
+      <button class="btn coral" type="submit">انشر الطلب</button>
+      <div class="msg" id="postMsg"></div>
+    </form>
+  </div>
+
+  <!-- ACCOUNT VIEW -->
+  <div class="view" id="view-account">
+    <div class="auth-card" id="loginCard">
+      <h2>تسجيل الدخول</h2>
+      <form id="loginForm">
+        <div class="field"><label>البريد الإلكتروني</label><input type="email" id="loginEmail" required></div>
+        <div class="field"><label>كلمة المرور</label><input type="password" id="loginPassword" required></div>
+        <button class="btn" type="submit">دخول</button>
+        <div class="msg" id="loginMsg"></div>
+      </form>
+      <button class="btn-link" onclick="toggleAuthCard('signup')">مفيش حساب؟ سجل واحد جديد</button>
+    </div>
+
+    <div class="auth-card" id="signupCard" style="display:none;">
+      <h2>حساب جديد</h2>
+      <form id="signupForm">
+        <div class="field"><label>الاسم</label><input type="text" id="signupName" required></div>
+        <div class="field"><label>البريد الإلكتروني</label><input type="email" id="signupEmail" required></div>
+        <div class="field"><label>كلمة المرور</label><input type="password" id="signupPassword" minlength="6" required></div>
+        <div class="field">
+          <label>أنت هتستخدم الموقع كـ:</label>
+          <select id="signupRole">
+            <option value="customer">عميل (طالب خدمة)</option>
+            <option value="provider">مزود خدمة</option>
+            <option value="both">الاتنين</option>
+          </select>
+        </div>
+        <button class="btn coral" type="submit">إنشاء الحساب</button>
+        <div class="msg" id="signupMsg"></div>
+      </form>
+      <button class="btn-link" onclick="toggleAuthCard('login')">عندك حساب؟ سجل دخول</button>
+    </div>
+  </div>
+
+  <!-- PROFILE VIEW (me) -->
+  <div class="view" id="view-mine">
+    <div id="mineAuthRequired" class="auth-card" style="display:none;">
+      <h2>سجّل دخولك الأول</h2>
+      <button class="btn" onclick="switchView('account')">تسجيل الدخول / حساب جديد</button>
+    </div>
+    <div id="mineContent"></div>
+  </div>
+
+  <!-- PUBLIC PROFILE VIEW (someone else) -->
+  <div class="view" id="view-profile">
+    <div id="profileContent"></div>
+  </div>
+
+  <!-- CHATS VIEW -->
+  <div class="view" id="view-chats">
+    <div id="chatsAuthRequired" class="auth-card" style="display:none;">
+      <h2>سجّل دخولك الأول</h2>
+      <p style="color:var(--ink-soft); font-size:0.9rem;">لازم يكون عندك حساب عشان تشوف المحادثات.</p>
+      <button class="btn" onclick="switchView('account')">تسجيل الدخول / حساب جديد</button>
+    </div>
+    <div id="chatsListWrap"></div>
+    <div id="chatThreadWrap" style="display:none;"></div>
+  </div>
+
+</main>
+
+<nav>
+  <button class="nav-btn active" data-view="board" aria-label="لوحة الطلبات">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg>
+    <span class="nav-label">لوحة الطلبات</span>
+  </button>
+  <button class="nav-btn" data-view="post" aria-label="انشر طلب">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 9v6M9 12h6"/></svg>
+    <span class="nav-label">انشر طلب</span>
+  </button>
+  <button class="nav-btn" data-view="chats" aria-label="المحادثات">
+    <svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.35 0-2.62-.32-3.73-.9L3 21l1.9-5.77A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+    <span class="nav-label">شات</span>
+  </button>
+  <button class="nav-btn" data-view="mine" aria-label="بروفايل">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="3.4"/><path d="M4.5 20c0-3.6 3.3-6.2 7.5-6.2s7.5 2.6 7.5 6.2"/></svg>
+    <span class="nav-label">بروفايل</span>
+  </button>
+</nav>
+
+<div class="modal-overlay" id="offersModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <h3 id="modalReqTitle"></h3>
+    <div id="modalOffersList"></div>
+    <div id="modalOfferFormWrap"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// إعدادات الاتصال بقاعدة البيانات (Supabase)
+// ============================================
+const SUPABASE_URL = "https://vkoktxlniypiltqirfue.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Z6c0HnfrkFMW54qiLmEZyQ_pe9IdAbL";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let currentProfile = null;
+let categories = [];
+let chatSubscription = null;
+let activeConversationId = null;
+
+// ---------- Theme toggle ----------
+const themeToggle = document.getElementById('themeToggle');
+let theme = 'light';
+themeToggle.addEventListener('click', ()=>{
+  theme = theme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  themeToggle.classList.toggle('is-dark', theme === 'dark');
+  themeToggle.classList.add('spin');
+  setTimeout(()=>themeToggle.classList.remove('spin'), 400);
+});
+
+// ---------- Header 3D scroll parallax ----------
+let ticking = false;
+window.addEventListener('scroll', ()=>{
+  if(!ticking){
+    requestAnimationFrame(()=>{
+      const y = window.scrollY;
+      const header = document.querySelector('header');
+      const shift = Math.min(y * 0.25, 34);
+      const scale = Math.max(1 - y * 0.0006, 0.92);
+      header.style.transform = `translateY(${shift}px) scale(${scale})`;
+      header.style.opacity = Math.max(1 - y * 0.0028, 0.45);
+      ticking = false;
+    });
+    ticking = true;
+  }
+});
+
+// ---------- Flyer cards: flip in from alternating sides, replays on scroll up/down ----------
+function addTiltEffect(el){
+  el.addEventListener('mousemove', (e)=>{
+    const r = el.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    el.style.setProperty('--rx', (-py * 8) + 'deg');
+  });
+  el.addEventListener('mouseleave', ()=>{
+    el.style.setProperty('--rx', '0deg');
+  });
+}
+
+function enhanceNotes(container){
+  const notes = container.querySelectorAll('.note');
+  if(!notes.length) return;
+  notes.forEach((n, i)=>{
+    const side = i % 2 === 0 ? 1 : -1;
+    n.style.setProperty('--side', side);
+    n.style.setProperty('--rot', ((Math.random() * 3 - 1.5).toFixed(2)) + 'deg');
+    addTiltEffect(n);
+  });
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      en.target.classList.toggle('in-view', en.isIntersecting);
+    });
+  }, { threshold: 0.2 });
+  notes.forEach(n => io.observe(n));
+}
+
+// ---------- Toast ----------
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ---------- Helpers ----------
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s ?? '';
+  return d.innerHTML;
+}
+function escapeAttr(s){
+  return (s ?? '').toString().replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+function getInitials(name){
+  if(!name) return '؟';
+  const parts = name.trim().split(/\s+/);
+  return parts.slice(0,2).map(p=>p[0]).join('');
+}
+
+// ---------- Navigation ----------
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const navBtn = document.querySelector(`.nav-btn[data-view="${name}"]`);
+  if(navBtn) navBtn.classList.add('active');
+
+  if(name !== 'chats' && chatSubscription){
+    sb.removeChannel(chatSubscription);
+    chatSubscription = null;
+    activeConversationId = null;
+  }
+
+  if(name === 'post') refreshPostView();
+  if(name === 'mine') refreshMineView();
+  if(name === 'board') loadBoard();
+  if(name === 'chats') refreshChatsView();
+}
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchView(btn.dataset.view));
+});
+
+function toggleAuthCard(which){
+  document.getElementById('loginCard').style.display = which==='login' ? 'block':'none';
+  document.getElementById('signupCard').style.display = which==='signup' ? 'block':'none';
+}
+
+// ---------- Auth ----------
+async function refreshSession(){
+  const { data:{ session } } = await sb.auth.getSession();
+  currentUser = session ? session.user : null;
+  if(currentUser){
+    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    currentProfile = data;
+  } else {
+    currentProfile = null;
+  }
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  await refreshSession();
+  toast('تم تسجيل الخروج');
+  switchView('board');
+}
+
+document.getElementById('signupForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById('signupMsg');
+  msg.textContent = '';
+  const name = document.getElementById('signupName').value;
+  const email = document.getElementById('signupEmail').value;
+  const password = document.getElementById('signupPassword').value;
+  const role = document.getElementById('signupRole').value;
+
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if(error){ msg.textContent = error.message; msg.className='msg error'; return; }
+
+  if(data.user){
+    await sb.from('profiles').insert({ id: data.user.id, full_name: name, role: role });
+  }
+  msg.textContent = 'تم إنشاء الحساب! لو طلب تأكيد بريد، افتح إيميلك وأكّده ثم سجل دخول.';
+  msg.className = 'msg ok';
+  await refreshSession();
+  if(currentUser) switchView('board');
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById('loginMsg');
+  msg.textContent = '';
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ msg.textContent = error.message; msg.className='msg error'; return; }
+  await refreshSession();
+  toast('تم تسجيل الدخول');
+  switchView('board');
+});
+
+// ---------- Categories ----------
+async function loadCategories(){
+  const { data, error } = await sb.from('categories').select('*').order('id');
+  if(!error && data && data.length){
+    categories = data;
+  } else {
+    // fallback لو لسه مفيش تصنيفات متضافة في القاعدة
+    categories = [
+      {id:null, name:'تصميم'}, {id:null, name:'كتابة CV'},
+      {id:null, name:'ترجمة'}, {id:null, name:'صيانة'}, {id:null, name:'برمجة بسيطة'}
+    ];
+  }
+  const sel = document.getElementById('reqCategory');
+  sel.innerHTML = categories.map(c=>`<option value="${c.id ?? ''}">${c.name}</option>`).join('');
+}
+
+// ---------- Board ----------
+async function loadBoard(){
+  const grid = document.getElementById('boardGrid');
+  grid.innerHTML = '<div class="empty">جارٍ التحميل...</div>';
+  const { data, error } = await sb
+    .from('service_requests')
+    .select('*, categories(name), profiles!customer_id(id, full_name)')
+    .eq('status','open')
+    .order('created_at', { ascending:false });
+
+  if(error){
+    grid.innerHTML = `<div class="empty">حصل خطأ في تحميل الطلبات: ${error.message}</div>`;
+    return;
+  }
+  if(!data || !data.length){
+    grid.innerHTML = '<div class="empty">مفيش طلبات مفتوحة دلوقتي. كن أول واحد يعلّق طلب!</div>';
+    return;
+  }
+  grid.innerHTML = data.map(r => {
+    const ownerName = r.profiles?.full_name ?? 'مستخدم';
+    return `
+    <div class="note">
+      <div class="note-body">
+        <span class="cat">${r.categories?.name ?? 'عام'}</span>
+        <div class="user-chip" onclick="openProfile('${r.customer_id}', '${escapeAttr(ownerName)}')">
+          <div class="mini-avatar">${escapeHtml(getInitials(ownerName))}</div>
+          <span>${escapeHtml(ownerName)}</span>
+        </div>
+        <h3>${escapeHtml(r.title)}</h3>
+        <p>${escapeHtml(r.description)}</p>
+        <div class="meta">
+          <span>${r.budget ? 'الميزانية: ' + r.budget + ' ج.م' : 'ميزانية مفتوحة'}</span>
+          <b>مفتوح</b>
+        </div>
+      </div>
+      <button class="tab-btn" onclick="openOffers('${r.id}', ${JSON.stringify(r.title).replace(/"/g,'&quot;')})">شوف العروض / قدّم عرض</button>
+    </div>
+  `;
+  }).join('');
+  enhanceNotes(grid);
+}
+
+// ---------- Post request ----------
+function refreshPostView(){
+  const authReq = document.getElementById('authRequired');
+  const form = document.getElementById('postForm');
+  if(currentUser){
+    authReq.style.display='none';
+    form.style.display='block';
+  } else {
+    authReq.style.display='block';
+    form.style.display='none';
+  }
+}
+
+document.getElementById('postForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById('postMsg');
+  msg.textContent='';
+  const catId = document.getElementById('reqCategory').value || null;
+  const title = document.getElementById('reqTitle').value;
+  const description = document.getElementById('reqDesc').value;
+  const budget = document.getElementById('reqBudget').value || null;
+
+  const { error } = await sb.from('service_requests').insert({
+    customer_id: currentUser.id,
+    category_id: catId,
+    title, description, budget
+  });
+  if(error){ msg.textContent = error.message; msg.className='msg error'; return; }
+  msg.textContent = 'تم نشر الطلب بنجاح!';
+  msg.className = 'msg ok';
+  e.target.reset();
+  toast('اتعلّق الطلب على اللوحة');
+  setTimeout(()=>switchView('board'), 600);
+});
+
+// ---------- Offers modal ----------
+let activeRequestId = null;
+
+async function openOffers(requestId, title){
+  activeRequestId = requestId;
+  document.getElementById('modalReqTitle').textContent = title;
+  document.getElementById('offersModal').classList.add('active');
+  await loadOffersForModal(requestId);
+
+  const wrap = document.getElementById('modalOfferFormWrap');
+  if(currentUser){
+    wrap.innerHTML = `
+      <form id="offerForm" style="margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;">
+        <div class="field"><label>سعرك المقترح (ج.م)</label><input type="number" id="offerPrice" required></div>
+        <div class="field"><label>المدة (بالأيام)</label><input type="number" id="offerDuration" required></div>
+        <div class="field"><label>رسالة (اختياري)</label><textarea id="offerMsg"></textarea></div>
+        <button class="btn coral" type="submit">ابعت العرض</button>
+        <div class="msg" id="offerFormMsg"></div>
+      </form>`;
+    document.getElementById('offerForm').addEventListener('submit', submitOffer);
+  } else {
+    wrap.innerHTML = `<p style="font-size:0.85rem; color:var(--ink-soft); margin-top:14px;">سجل دخولك عشان تقدر تقدم عرض.</p>`;
+  }
+}
+
+async function loadOffersForModal(requestId){
+  const list = document.getElementById('modalOffersList');
+  list.innerHTML = 'جارٍ التحميل...';
+  const { data, error } = await sb.from('offers').select('*, profiles(full_name)').eq('request_id', requestId).order('created_at');
+  if(error){ list.innerHTML = `خطأ: ${error.message}`; return; }
+  if(!data || !data.length){ list.innerHTML = '<p style="color:var(--ink-soft); font-size:0.9rem;">لسه مفيش عروض على الطلب ده.</p>'; return; }
+  list.innerHTML = data.map(o=>`
+    <div class="offer-item">
+      <div><b>${escapeHtml(o.profiles?.full_name ?? 'مزود خدمة')}</b></div>
+      <div class="price">${o.price} ج.م — ${o.duration_days} يوم</div>
+      ${o.message ? `<div style="font-size:0.88rem; margin-top:4px;">${escapeHtml(o.message)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function submitOffer(e){
+  e.preventDefault();
+  const msg = document.getElementById('offerFormMsg');
+  msg.textContent = '';
+  const price = document.getElementById('offerPrice').value;
+  const duration_days = document.getElementById('offerDuration').value;
+  const message = document.getElementById('offerMsg').value;
+
+  const { error } = await sb.from('offers').insert({
+    request_id: activeRequestId,
+    provider_id: currentUser.id,
+    price, duration_days, message
+  });
+  if(error){ msg.textContent = error.message; msg.className='msg error'; return; }
+  toast('اتبعت عرضك بنجاح');
+  await loadOffersForModal(activeRequestId);
+  document.getElementById('offerForm').reset();
+}
+
+function closeModal(){
+  document.getElementById('offersModal').classList.remove('active');
+  activeRequestId = null;
+}
+
+// ---------- Public profile (someone else) ----------
+async function openProfile(userId, fallbackName){
+  if(currentUser && userId === currentUser.id){
+    switchView('mine');
+    return;
+  }
+  switchView('profile');
+  const content = document.getElementById('profileContent');
+  content.innerHTML = '<div class="empty">جارٍ التحميل...</div>';
+
+  const { data } = await sb.from('profiles').select('*').eq('id', userId).single();
+  const name = data?.full_name ?? fallbackName ?? 'مستخدم';
+  const roleLabel = data?.role === 'provider' ? 'مزود خدمة' : data?.role === 'both' ? 'عميل ومزود خدمة' : 'عميل';
+
+  content.innerHTML = `
+    <div class="auth-card profile-view-card">
+      <div class="avatar avatar-lg" style="margin:0 auto 14px;">${escapeHtml(getInitials(name))}</div>
+      <h2 style="margin:0 0 4px;">${escapeHtml(name)}</h2>
+      <p style="color:var(--ink-soft); font-size:0.85rem; margin:0 0 18px;">${roleLabel}</p>
+      ${currentUser ? `
+        <button class="btn coral" id="startChatBtn" style="display:flex; align-items:center; justify-content:center; gap:8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.35 0-2.62-.32-3.73-.9L3 21l1.9-5.77A8.5 8.5 0 1 1 21 11.5Z"/></svg>
+          راسل
+        </button>
+      ` : `<p style="font-size:0.85rem; color:var(--ink-soft);">سجل دخولك عشان تقدر تراسله.</p>`}
+    </div>
+  `;
+
+  if(currentUser){
+    document.getElementById('startChatBtn').addEventListener('click', ()=> startConversation(userId, name));
+  }
+}
+
+// ---------- Chats ----------
+async function startConversation(otherUserId, otherName){
+  if(!currentUser) return;
+  const a = currentUser.id < otherUserId ? currentUser.id : otherUserId;
+  const b = currentUser.id < otherUserId ? otherUserId : currentUser.id;
+
+  let convo = null;
+  const { data: existing, error: findErr } = await sb.from('conversations').select('*').eq('user_a', a).eq('user_b', b).maybeSingle();
+  if(findErr){ toast('حصل خطأ: ' + findErr.message); return; }
+  convo = existing;
+
+  if(!convo){
+    const { data: created, error } = await sb.from('conversations').insert({ user_a:a, user_b:b }).select().single();
+    if(error){ toast('حصل خطأ: ' + error.message); return; }
+    convo = created;
+  }
+  switchView('chats');
+  openChatThread(convo.id, otherName);
+}
+
+async function refreshChatsView(){
+  const authReq = document.getElementById('chatsAuthRequired');
+  const listWrap = document.getElementById('chatsListWrap');
+  const threadWrap = document.getElementById('chatThreadWrap');
+  threadWrap.style.display = 'none';
+  threadWrap.innerHTML = '';
+
+  if(!currentUser){
+    authReq.style.display='block';
+    listWrap.style.display='none';
+    return;
+  }
+  authReq.style.display='none';
+  listWrap.style.display='block';
+  listWrap.innerHTML = '<div class="empty">جارٍ التحميل...</div>';
+
+  const { data, error } = await sb.from('conversations')
+    .select('*, ua:profiles!conversations_user_a_fkey(id, full_name), ub:profiles!conversations_user_b_fkey(id, full_name)')
+    .or(`user_a.eq.${currentUser.id},user_b.eq.${currentUser.id}`)
+    .order('created_at', { ascending:false });
+
+  if(error){ listWrap.innerHTML = `<div class="empty">حصل خطأ في تحميل المحادثات: ${error.message}</div>`; return; }
+  if(!data || !data.length){
+    listWrap.innerHTML = '<div class="empty">لسه معندكش أي محادثات. ابدأ واحدة من بروفايل أي حد.</div>';
+    return;
+  }
+
+  listWrap.innerHTML = data.map(c=>{
+    const other = c.ua?.id === currentUser.id ? c.ub : c.ua;
+    const otherName = other?.full_name ?? 'مستخدم';
+    return `
+      <div class="chat-item" onclick="openChatThread('${c.id}', '${escapeAttr(otherName)}')">
+        <div class="mini-avatar">${escapeHtml(getInitials(otherName))}</div>
+        <div class="chat-meta">
+          <h4>${escapeHtml(otherName)}</h4>
+          <p>اضغط لفتح المحادثة</p>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function openChatThread(conversationId, otherName){
+  activeConversationId = conversationId;
+  document.getElementById('chatsListWrap').style.display='none';
+  const wrap = document.getElementById('chatThreadWrap');
+  wrap.style.display='block';
+  wrap.innerHTML = `
+    <button class="chat-back" onclick="closeChatThread()">
+      <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      ${escapeHtml(otherName)}
+    </button>
+    <div class="chat-thread">
+      <div class="chat-messages" id="chatMessages"><div class="empty">جارٍ التحميل...</div></div>
+      <form class="chat-input-row" id="chatInputForm">
+        <input type="text" id="chatInput" placeholder="اكتب رسالة..." required autocomplete="off">
+        <button type="submit" aria-label="ابعت">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="#fff" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+        </button>
+      </form>
+    </div>
+  `;
+
+  await loadMessages(conversationId);
+
+  document.getElementById('chatInputForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const input = document.getElementById('chatInput');
+    const content = input.value.trim();
+    if(!content) return;
+    input.value = '';
+    const { error } = await sb.from('messages').insert({ conversation_id: conversationId, sender_id: currentUser.id, content });
+    if(error){ toast('حصل خطأ: ' + error.message); return; }
+    await loadMessages(conversationId);
+  });
+
+  if(chatSubscription){ sb.removeChannel(chatSubscription); }
+  chatSubscription = sb.channel('messages-'+conversationId)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`conversation_id=eq.${conversationId}` }, ()=>{
+      loadMessages(conversationId);
+    }).subscribe();
+}
+
+async function loadMessages(conversationId){
+  const box = document.getElementById('chatMessages');
+  if(!box) return;
+  const { data, error } = await sb.from('messages').select('*').eq('conversation_id', conversationId).order('created_at');
+  if(error){ box.innerHTML = `<div class="empty">حصل خطأ: ${error.message}</div>`; return; }
+  if(!data || !data.length){ box.innerHTML = '<div class="empty">قول أول حاجة 👋</div>'; return; }
+  box.innerHTML = data.map(m=>`
+    <div class="bubble ${m.sender_id === currentUser.id ? 'mine':'theirs'}">${escapeHtml(m.content)}</div>
+  `).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function closeChatThread(){
+  if(chatSubscription){ sb.removeChannel(chatSubscription); chatSubscription = null; }
+  activeConversationId = null;
+  document.getElementById('chatThreadWrap').style.display='none';
+  document.getElementById('chatThreadWrap').innerHTML='';
+  refreshChatsView();
+}
+
+// ---------- Profile view (my requests + my offers + account settings) ----------
+async function refreshMineView(){
+  const authReq = document.getElementById('mineAuthRequired');
+  const content = document.getElementById('mineContent');
+  if(!currentUser){
+    authReq.style.display = 'block';
+    content.innerHTML = '';
+    return;
+  }
+  authReq.style.display = 'none';
+  content.innerHTML = '<div class="empty">جارٍ التحميل...</div>';
+
+  const { data: myRequests } = await sb.from('service_requests').select('*').eq('customer_id', currentUser.id).order('created_at', {ascending:false});
+  const { data: myOffers } = await sb.from('offers').select('*, service_requests(title)').eq('provider_id', currentUser.id).order('created_at', {ascending:false});
+
+  const displayName = currentProfile ? currentProfile.full_name : currentUser.email;
+  let html = `
+    <div class="profile-head">
+      <div class="avatar">${escapeHtml(getInitials(displayName))}</div>
+      <div class="profile-info">
+        <h2>${escapeHtml(displayName)}</h2>
+        <p style="margin:2px 0 0;color:var(--ink-soft);font-size:.85rem;">${escapeHtml(currentUser.email ?? '')}</p>
+      </div>
+      <button class="settings-btn" id="settingsBtn" aria-label="إعدادات الحساب" type="button">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+      </button>
+    </div>
+    <div class="settings-panel" id="settingsPanel" style="display:none;">
+      <h4>معلومات الحساب</h4>
+      <div class="field"><label>الاسم</label><input type="text" id="settingsName" value="${escapeHtml(currentProfile?.full_name ?? '')}"></div>
+      <div class="field"><label>البريد الإلكتروني</label><input type="email" id="settingsEmail" value="${escapeHtml(currentUser.email ?? '')}" disabled></div>
+      <button class="btn" id="saveSettingsBtn" type="button">حفظ التعديلات</button>
+      <div class="msg" id="settingsMsg"></div>
+      <button class="btn-link" id="settingsLogoutBtn" type="button" style="color:var(--coral); margin-top:14px;">تسجيل الخروج</button>
+    </div>
+  `;
+
+  html += '<h2 style="color:var(--ink);">طلباتي</h2>';
+  if(myRequests && myRequests.length){
+    html += '<div class="board-grid">' + myRequests.map(r=>`
+      <div class="note">
+        <div class="note-body">
+          <h3>${escapeHtml(r.title)}</h3>
+          <p>${escapeHtml(r.description)}</p>
+          <div class="meta"><span>الحالة</span><b>${r.status}</b></div>
+        </div>
+      </div>`).join('') + '</div>';
+  } else {
+    html += '<p style="color:var(--ink-soft);">لسه منشرتش أي طلب.</p>';
+  }
+
+  html += '<h2 style="color:var(--ink); margin-top:24px;">عروضي</h2>';
+  if(myOffers && myOffers.length){
+    html += myOffers.map(o=>`
+      <div class="offer-item">
+        <div><b>${escapeHtml(o.service_requests?.title ?? '')}</b></div>
+        <div class="price">${o.price} ج.م — ${o.duration_days} يوم</div>
+        <div style="font-size:0.85rem; color:var(--ink-soft);">الحالة: ${o.status}</div>
+      </div>`).join('');
+  } else {
+    html += '<p style="color:var(--ink-soft);">لسه قدمتش أي عرض.</p>';
+  }
+
+  content.innerHTML = html;
+  enhanceNotes(content);
+
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsPanel = document.getElementById('settingsPanel');
+  settingsBtn.addEventListener('click', ()=>{
+    const isOpen = settingsPanel.style.display !== 'none';
+    settingsPanel.style.display = isOpen ? 'none' : 'block';
+    settingsBtn.classList.toggle('open', !isOpen);
+  });
+
+  document.getElementById('settingsLogoutBtn').addEventListener('click', logout);
+
+  document.getElementById('saveSettingsBtn').addEventListener('click', async ()=>{
+    const msg = document.getElementById('settingsMsg');
+    msg.textContent = '';
+    const newName = document.getElementById('settingsName').value.trim();
+    try{
+      if(newName && newName !== currentProfile?.full_name){
+        const { error } = await sb.from('profiles').update({ full_name: newName }).eq('id', currentUser.id);
+        if(error) throw error;
+      }
+      await refreshSession();
+      msg.textContent = 'تم حفظ التعديلات بنجاح.';
+      msg.className = 'msg ok';
+      toast('تم الحفظ');
+      document.querySelector('.profile-info h2').textContent = currentProfile ? currentProfile.full_name : currentUser.email;
+    } catch(err){
+      msg.textContent = err.message;
+      msg.className = 'msg error';
+    }
+  });
+}
+
+// ---------- Init ----------
+(async function init(){
+  await refreshSession();
+  await loadCategories();
+  await loadBoard();
+})();
+</script>
+</body>
+</html>
