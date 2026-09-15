@@ -199,22 +199,6 @@
   }
   .note{
     position:relative;
-    --side: 1;
-    --tx: calc(var(--side) * 90px);
-    --ry: calc(var(--side) * -35deg);
-    --rx: 0deg;
-    --sc: .92;
-    --rot: 0deg;
-    opacity:0;
-    transform: translateX(var(--tx)) rotateY(var(--ry)) rotateX(var(--rx)) rotateZ(var(--rot)) scale(var(--sc));
-    transition: opacity .5s cubic-bezier(.22,.9,.3,1.1),
-                transform .6s cubic-bezier(.22,.9,.3,1.1);
-    transform-style:preserve-3d;
-    will-change:transform, opacity;
-  }
-  .note.in-view{
-    --tx:0px; --ry:0deg; --sc:1;
-    opacity:1;
   }
   .note::before{
     content:'';
@@ -282,7 +266,6 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    .note{ transition:none !important; opacity:1 !important; transform:none !important; }
     .theme-toggle.spin svg{ animation:none !important; }
     header{ transition:none !important; }
   }
@@ -589,6 +572,7 @@ let currentProfile = null;
 let categories = [];
 let chatSubscription = null;
 let activeConversationId = null;
+let offersSubscription = null;
 
 // ---------- Theme toggle ----------
 const themeToggle = document.getElementById('themeToggle');
@@ -618,34 +602,9 @@ window.addEventListener('scroll', ()=>{
   }
 });
 
-// ---------- Flyer cards: flip in from alternating sides, replays on scroll up/down ----------
-function addTiltEffect(el){
-  el.addEventListener('mousemove', (e)=>{
-    const r = el.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width - 0.5;
-    const py = (e.clientY - r.top) / r.height - 0.5;
-    el.style.setProperty('--rx', (-py * 8) + 'deg');
-  });
-  el.addEventListener('mouseleave', ()=>{
-    el.style.setProperty('--rx', '0deg');
-  });
-}
-
+// ---------- Flyer cards: no animation, static render ----------
 function enhanceNotes(container){
-  const notes = container.querySelectorAll('.note');
-  if(!notes.length) return;
-  notes.forEach((n, i)=>{
-    const side = i % 2 === 0 ? 1 : -1;
-    n.style.setProperty('--side', side);
-    n.style.setProperty('--rot', ((Math.random() * 3 - 1.5).toFixed(2)) + 'deg');
-    addTiltEffect(n);
-  });
-  const io = new IntersectionObserver((entries)=>{
-    entries.forEach(en=>{
-      en.target.classList.toggle('in-view', en.isIntersecting);
-    });
-  }, { threshold: 0.2 });
-  notes.forEach(n => io.observe(n));
+  // الحركة اتلغت بناءً على طلبك؛ الكروت بتظهر ثابتة على طول.
 }
 
 // ---------- Toast ----------
@@ -868,6 +827,12 @@ async function openOffers(requestId, title){
   } else {
     wrap.innerHTML = `<p style="font-size:0.85rem; color:var(--ink-soft); margin-top:14px;">سجل دخولك عشان تقدر تقدم عرض.</p>`;
   }
+
+  if(offersSubscription){ sb.removeChannel(offersSubscription); }
+  offersSubscription = sb.channel('offers-'+requestId)
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'offers', filter:`request_id=eq.${requestId}` }, ()=>{
+      loadOffersForModal(requestId);
+    }).subscribe();
 }
 
 async function loadOffersForModal(requestId){
@@ -907,6 +872,7 @@ async function submitOffer(e){
 function closeModal(){
   document.getElementById('offersModal').classList.remove('active');
   activeRequestId = null;
+  if(offersSubscription){ sb.removeChannel(offersSubscription); offersSubscription = null; }
 }
 
 // ---------- Public profile (someone else) ----------
@@ -1079,6 +1045,15 @@ async function refreshMineView(){
   const { data: myRequests } = await sb.from('service_requests').select('*').eq('customer_id', currentUser.id).order('created_at', {ascending:false});
   const { data: myOffers } = await sb.from('offers').select('*, service_requests(title)').eq('provider_id', currentUser.id).order('created_at', {ascending:false});
 
+  // نجيب عدد العروض على كل طلب من طلباتي عشان أعرف لو وصلني عروض
+  let offerCounts = {};
+  if(myRequests && myRequests.length){
+    const { data: offersOnMine } = await sb.from('offers').select('id, request_id').in('request_id', myRequests.map(r=>r.id));
+    if(offersOnMine){
+      offersOnMine.forEach(o=>{ offerCounts[o.request_id] = (offerCounts[o.request_id] || 0) + 1; });
+    }
+  }
+
   const displayName = currentProfile ? currentProfile.full_name : currentUser.email;
   let html = `
     <div class="profile-head">
@@ -1103,14 +1078,20 @@ async function refreshMineView(){
 
   html += '<h2 style="color:var(--ink);">طلباتي</h2>';
   if(myRequests && myRequests.length){
-    html += '<div class="board-grid">' + myRequests.map(r=>`
+    html += '<div class="board-grid">' + myRequests.map(r=>{
+      const count = offerCounts[r.id] || 0;
+      return `
       <div class="note">
         <div class="note-body">
           <h3>${escapeHtml(r.title)}</h3>
           <p>${escapeHtml(r.description)}</p>
           <div class="meta"><span>الحالة</span><b>${r.status}</b></div>
         </div>
-      </div>`).join('') + '</div>';
+        <button class="tab-btn" onclick="openOffers('${r.id}', ${JSON.stringify(r.title).replace(/"/g,'&quot;')})">
+          ${count > 0 ? `📩 ${count} عرض وصلك` : 'شوف العروض'}
+        </button>
+      </div>`;
+    }).join('') + '</div>';
   } else {
     html += '<p style="color:var(--ink-soft);">لسه منشرتش أي طلب.</p>';
   }
