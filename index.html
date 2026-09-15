@@ -264,6 +264,20 @@
   .empty{
     text-align:center; padding:50px 20px; color:var(--ink-soft);
   }
+  .note-delete-btn{
+    position:absolute;
+    top:8px; left:10px;
+    z-index:3;
+    width:30px; height:30px;
+    border-radius:50%;
+    border:1.5px solid var(--ink);
+    background:var(--surface);
+    color:var(--coral);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:2px 2px 0 var(--shadow);
+  }
+  .note-delete-btn svg{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
 
   @media (prefers-reduced-motion: reduce){
     .theme-toggle.spin svg{ animation:none !important; }
@@ -762,7 +776,7 @@ async function loadBoard(){
           <b>مفتوح</b>
         </div>
       </div>
-      <button class="tab-btn" onclick="openOffers('${r.id}', ${JSON.stringify(r.title).replace(/"/g,'&quot;')})">شوف العروض / قدّم عرض</button>
+      <button class="tab-btn" onclick="openOffers('${r.id}', ${JSON.stringify(r.title).replace(/"/g,'&quot;')}, '${r.customer_id}')">شوف العروض / قدّم عرض</button>
     </div>
   `;
   }).join('');
@@ -807,14 +821,17 @@ document.getElementById('postForm').addEventListener('submit', async (e)=>{
 // ---------- Offers modal ----------
 let activeRequestId = null;
 
-async function openOffers(requestId, title){
+async function openOffers(requestId, title, customerId){
   activeRequestId = requestId;
   document.getElementById('modalReqTitle').textContent = title;
   document.getElementById('offersModal').classList.add('active');
   await loadOffersForModal(requestId);
 
   const wrap = document.getElementById('modalOfferFormWrap');
-  if(currentUser){
+  const isOwner = currentUser && customerId && customerId === currentUser.id;
+  if(isOwner){
+    wrap.innerHTML = `<p style="font-size:0.85rem; color:var(--ink-soft); margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;">ده طلبك — دوس على اسم أي مزود خدمة تحت عرضه عشان تدخل بروفايله وتتواصل معاه.</p>`;
+  } else if(currentUser){
     wrap.innerHTML = `
       <form id="offerForm" style="margin-top:14px; border-top:1px dashed var(--line); padding-top:14px;">
         <div class="field"><label>سعرك المقترح (ج.م)</label><input type="number" id="offerPrice" required></div>
@@ -838,16 +855,23 @@ async function openOffers(requestId, title){
 async function loadOffersForModal(requestId){
   const list = document.getElementById('modalOffersList');
   list.innerHTML = 'جارٍ التحميل...';
-  const { data, error } = await sb.from('offers').select('*, profiles(full_name)').eq('request_id', requestId).order('created_at');
+  const { data, error } = await sb.from('offers').select('*, profiles(id, full_name)').eq('request_id', requestId).order('created_at');
   if(error){ list.innerHTML = `خطأ: ${error.message}`; return; }
   if(!data || !data.length){ list.innerHTML = '<p style="color:var(--ink-soft); font-size:0.9rem;">لسه مفيش عروض على الطلب ده.</p>'; return; }
-  list.innerHTML = data.map(o=>`
+  list.innerHTML = data.map(o=>{
+    const providerId = o.profiles?.id ?? '';
+    const providerName = o.profiles?.full_name ?? 'مزود خدمة';
+    return `
     <div class="offer-item">
-      <div><b>${escapeHtml(o.profiles?.full_name ?? 'مزود خدمة')}</b></div>
       <div class="price">${o.price} ج.م — ${o.duration_days} يوم</div>
       ${o.message ? `<div style="font-size:0.88rem; margin-top:4px;">${escapeHtml(o.message)}</div>` : ''}
+      <div class="user-chip" style="margin-top:10px; margin-bottom:0;" onclick="closeModal(); openProfile('${providerId}', '${escapeAttr(providerName)}')">
+        <div class="mini-avatar">${escapeHtml(getInitials(providerName))}</div>
+        <span>${escapeHtml(providerName)}</span>
+      </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 async function submitOffer(e){
@@ -1082,12 +1106,15 @@ async function refreshMineView(){
       const count = offerCounts[r.id] || 0;
       return `
       <div class="note">
+        <button class="note-delete-btn" onclick="deleteRequest('${r.id}')" aria-label="مسح الطلب" title="مسح الطلب">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16Z"/></svg>
+        </button>
         <div class="note-body">
           <h3>${escapeHtml(r.title)}</h3>
           <p>${escapeHtml(r.description)}</p>
           <div class="meta"><span>الحالة</span><b>${r.status}</b></div>
         </div>
-        <button class="tab-btn" onclick="openOffers('${r.id}', ${JSON.stringify(r.title).replace(/"/g,'&quot;')})">
+        <button class="tab-btn" onclick="openOffers('${r.id}', ${JSON.stringify(r.title).replace(/"/g,'&quot;')}, '${r.customer_id}')">
           ${count > 0 ? `📩 ${count} عرض وصلك` : 'شوف العروض'}
         </button>
       </div>`;
@@ -1140,6 +1167,15 @@ async function refreshMineView(){
       msg.className = 'msg error';
     }
   });
+}
+
+// ---------- Delete my own request ----------
+async function deleteRequest(requestId){
+  if(!confirm('متأكد إنك عايز تمسح الطلب ده؟ العملية دي مش هترجع.')) return;
+  const { error } = await sb.from('service_requests').delete().eq('id', requestId);
+  if(error){ toast('حصل خطأ: ' + error.message); return; }
+  toast('اتمسح الطلب');
+  refreshMineView();
 }
 
 // ---------- Init ----------
